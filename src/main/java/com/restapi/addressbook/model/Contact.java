@@ -1,29 +1,33 @@
 package com.restapi.addressbook.model;
 
-import java.util.Date;
-import java.util.UUID;
 
+import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-
+import javax.persistence.UniqueConstraint;
 import org.springframework.stereotype.Component;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.restapi.addressbook.util.AddressType;
 
 @Entity
-@Table(name="Address")
+@Table(name="contact", uniqueConstraints={@UniqueConstraint(columnNames={"fldPhoneNumber"})})
 @Component
 @JsonIgnoreProperties(ignoreUnknown =true)
-public class Address {
+public class Contact {
 
 
 	@Id
 	@GeneratedValue(strategy =  GenerationType.AUTO)
-	@Column(name="fldAddressId")
+	@Column(name="fldAddressId", columnDefinition = "BINARY(16)")
 	private UUID addressId;
 	
 	@Column(name="fldFirstName")
@@ -56,17 +60,31 @@ public class Address {
 	@Column(name="fldAddressType")
 	private String addressType;
 	
-//	@Column(name="fldAddressFrom")
-//	private Date addressFrom;
-//	
-//	@Column(name="fldAddressTo")
-//	private Date addressTo;
+	@Enumerated(EnumType.STRING)
+	@Column(name="AddressType")
+	private AddressType type ;
 	
-	@Column(name="fldAddressBookId")
-	private UUID addressBookId;
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name = "fldAddressBookId", nullable = false)
+	private AddressBook addressBook;
+
 	
-	@Column(name="fldParentGroup")
-	private String parentGroup;
+	public Contact() {
+		super();
+	}
+	
+	public Contact(String firstName, String lastName, String phoneNumber) {
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.phoneNumber = phoneNumber;
+	}
+
+	public Contact(UUID addressId,  String firstName, String lastName, String phoneNumber) {
+		this.addressId = addressId;
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.phoneNumber = phoneNumber;
+	}
 
 	public UUID getAddressId() {
 		return addressId;
@@ -156,42 +174,22 @@ public class Address {
 		this.addressType = addressType;
 	}
 
-//	public Date getAddressFrom() {
-//		return addressFrom;
-//	}
-//
-//	public void setAddressFrom(Date addressFrom) {
-//		this.addressFrom = addressFrom;
-//	}
-//
-//	public Date getAddressTo() {
-//		return addressTo;
-//	}
-//
-//	public void setAddressTo(Date addressTo) {
-//		this.addressTo = addressTo;
-//	}
-
-	public UUID getAddressBookId() {
-		return addressBookId;
+	public AddressType getType() {
+		return type;
 	}
 
-	public void setAddressBookId(UUID addressBookId) {
-		this.addressBookId = addressBookId;
+	public void setType(AddressType type) {
+		this.type = type;
 	}
 
-	public String getParentGroup() {
-		return parentGroup;
+	public AddressBook getAddressBook() {
+		return addressBook;
 	}
 
-	public void setParentGroup(String parentGroup) {
-		this.parentGroup = parentGroup;
+	public void setAddressBook(AddressBook addressBook) {
+		this.addressBook = addressBook;
 	}
-	
-	
-	
-	
-	
-	
+
+
 
 }

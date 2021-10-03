@@ -1,81 +1,69 @@
 package com.restapi.addressbook.exception;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.validation.FieldError;
 
-
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler  extends ResponseEntityExceptionHandler {
 
-	
-	private static final Logger logger  = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-	
-		
+			
 	    @ExceptionHandler(Exception.class)
 	    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-	    public ResponseEntity<String> handleAllUncaughtException(Exception exception) {
-	    	logger.error("Unknown error occurred", exception);
-	    	 
-	    	 HttpStatus statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
-	    	
-	    	 ErrorMessage errorMessage = createErrorMessage(statusCode , "Unknown error occurred");
+	    public ResponseEntity<Object> handleAllUncaughtException(Exception exception, WebRequest webRequest) {
+	     
+	    	 String errorMessage = "Unknown error occurred";
 		
-	    	 return new ResponseEntity<>(errorMessage.message, statusCode);
+	    	 return  handleExceptionInternal(exception, errorMessage, 
+	    	          new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, webRequest);
 	    }
 	    
-//	    @ExceptionHandler(MethodNotAllowed.class)
-//	    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
-//	    public ResponseEntity<String> handleMethodNotAllowtException(Exception exception) {
-//	    	logger.error("method not allowed", exception);
-//	    	 
-//		   	 HttpStatus statusCode = HttpStatus.METHOD_NOT_ALLOWED;
-//		   	
-//		   	 ErrorMessage errorMessage = createErrorMessage(statusCode , "Error in method type, please enter vaild method type");
-//			
-//		   	 return new ResponseEntity<>(errorMessage.message, statusCode);
-//	    
-//	    }
-//	    
-//	    @ExceptionHandler(InvalidInputException.class)
-//	    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-//	    public ResponseEntity<String> handleMethodNotAllowtException(InvalidInputException exception) {
-//	    	logger.error("Invalid input exception", exception);
-//	    	
-//		   	 HttpStatus statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
-//		   	
-//		   	 ErrorMessage errorMessage = createErrorMessage(statusCode , "Error in input type, please enter vaild input");
-//			
-//		   	 return new ResponseEntity<>(errorMessage.message, statusCode);
-//		   	    
-//	    }
+	    @Override
+	    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+				HttpHeaders headers, HttpStatus status, WebRequest request) {
+			
+			Map<String, String> errors = new HashMap<>();
+			ex.getBindingResult().getAllErrors().forEach((error) ->{
+				
+				String fieldName = ((FieldError) error).getField();
+				String message = error.getDefaultMessage();
+				errors.put(fieldName, message);
+			});
+			
+			return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+		}
 	    
-	    private ErrorMessage createErrorMessage(HttpStatus code, String message) {
-	        return new ErrorMessage(code.value(), message);
-	    }
-	    
-	  
-	    @Getter
-	    @AllArgsConstructor
-	    static class ErrorMessage {
-	    	  
-	    	private String message;
-	    	private int code;
-	    	
-	        public ErrorMessage(int value, String message) {
-				this.code = value;
-				this.message= message;
-			}
-		
-	    }   
-	    
+	    @ExceptionHandler(ResourceAlreadyExistsException.class)
+	    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	    public  ResponseEntity<Object> handleResourceAlreadyExistsException(
+	        ResourceAlreadyExistsException exception, WebRequest webRequest) {
 
+	    	 return  handleExceptionInternal(exception, exception.getMessage(), 
+	    	          new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, webRequest);
+        
+	    }
+	    
+	    
+	    @ExceptionHandler(DataIntegrityViolationException.class)
+	    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	    public  ResponseEntity<Object> handleResourceSqlException(
+	    		SQLException exception, WebRequest webRequest) {
+
+	    	 return  handleExceptionInternal(exception, exception.getMessage(), 
+	    	          new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, webRequest);
+        
+	    }
+	    
 }
