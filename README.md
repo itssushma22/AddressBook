@@ -17,7 +17,9 @@
 	    5. Users should be able to print a unqiue set of all contacts across multiple address books.
 	    
 ### Assumptions
-          * User Role and permission for user is Full and not checking in this Api development    
+          * In this Api development, user roles and permissions are full and not checked.
+          * Each address book has a unique mobile number.   
+	  * Considering merely a single individual as a contact, the organization is out of the this API development.
 	    
 ### API Spec
          * Swagger
